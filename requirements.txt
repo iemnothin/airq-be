@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+pandas
+numpy
+prophet
+optuna
+holidays
+scikit-learn
+mysql-connector-python
+python-multipart

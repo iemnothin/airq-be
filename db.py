@@ -1,0 +1,28 @@
+# Production
+# db.py
+import mysql.connector
+
+def get_db_connection():
+    try:
+        conn = mysql.connector.connect(
+            host="127.0.0.1",
+            user="abiila_admin_airq",
+            password="2!7oiFWMIF68",
+            database="abiila_airq_db"
+        )
+        return conn
+    except Exception as e:
+        print("❌ Database connection failed:", e)
+        return None
+
+
+# Local
+# import mysql.connector
+
+# def get_db_connection():
+#     return mysql.connector.connect(
+#         host="localhost",
+#         user="root",
+#         password="",
+#         database="db_airq"
+#     )
