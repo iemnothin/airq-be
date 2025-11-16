@@ -21,8 +21,8 @@ app = FastAPI(
 
 # Enable CORS (optional but recommended for frontend)
 origins = [
-    "https://airq.abiila.com",
-    "http://airq.abiila.com",
+    "https://api-airq.abiila.com",
+    "http://api-airq.abiila.com",
 ]
 
 app.add_middleware(
