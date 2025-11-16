@@ -20,9 +20,14 @@ app = FastAPI(
 )
 
 # Enable CORS (optional but recommended for frontend)
+origins = [
+    "https://api-airq.abiila.com",
+    "http://api-airq.abiila.com",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://api-airq.abiila.com/"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
