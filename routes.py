@@ -771,7 +771,7 @@ def system_status():
     db_status = "disconnected"
     try:
         password = quote_plus("Criticaleven10")
-        engine = create_engine(f"mysql+pymysql://apia_abiila_admin:{password}@127.0.0.1/apia_abiila_airq_db")
+        engine = create_engine(f"mysql+pymysql://apia_abiila_admin:{password}@localhost/apia_abiila_airq_db")
 
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
