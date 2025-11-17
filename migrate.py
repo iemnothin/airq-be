@@ -10,8 +10,8 @@ load_dotenv()
 # ==============================
 DB_CONFIG = {
     "host": os.getenv("DB_HOST", "127.0.0.1"),
-    "database": os.getenv("DB_NAME", "abii_abiila_airq_db"),
-    "user": os.getenv("DB_USER", "abii_abiila_admin"),
+    "database": os.getenv("DB_NAME", "apia_abiila_airq_db"),
+    "user": os.getenv("DB_USER", "apia_abiila_admin"),
     "password": os.getenv("DB_PASS", "Criticaleven10"),
 }
 
