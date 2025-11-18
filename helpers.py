@@ -7,7 +7,7 @@ from db import get_db_connection
 def fetch_all_data():
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
 
         cursor.execute("SHOW TABLES LIKE 'air_quality_data'")
         if not cursor.fetchone():

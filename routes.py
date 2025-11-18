@@ -353,26 +353,26 @@ async def upload_csv(file: UploadFile = File(...)):
         data = pd.read_csv(io.StringIO(content.decode("utf-8")))
 
         required_cols = [
-            "Waktu",
-            "PM10",
-            "PM25",
-            "SO2",
-            "CO",
-            "O3",
-            "NO2",
-            "HC",
+            "waktu",
+            "pm10",
+            "pm25",
+            "so2",
+            "co",
+            "o3",
+            "no2",
+            "hc",
         ]
         for col in required_cols:
             if col not in data.columns:
                 return JSONResponse({"error": f"Missing column '{col}'"}, 400)
 
-        if "Kelembaban" not in data.columns:
-            data["Kelembaban"] = None
-        if "Suhu" not in data.columns:
-            data["Suhu"] = None
+        if "kelembaban" not in data.columns:
+            data["kelembaban"] = None
+        if "suhu" not in data.columns:
+            data["suhu"] = None
 
-        data["Waktu"] = pd.to_datetime(data["Waktu"], errors="coerce")
-        data = data.dropna(subset=["Waktu"])
+        data["waktu"] = pd.to_datetime(data["waktu"], errors="coerce")
+        data = data.dropna(subset=["waktu"])
 
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -386,16 +386,16 @@ async def upload_csv(file: UploadFile = File(...)):
             cursor.execute(
                 insert_sql,
                 (
-                    r["Waktu"].strftime("%Y-%m-%d %H:%M:%S"),
-                    r["PM10"],
-                    r["PM25"],
-                    r["SO2"],
-                    r["CO"],
-                    r["O3"],
-                    r["NO2"],
-                    r["HC"],
-                    r["Kelembaban"],
-                    r["Suhu"],
+                    r["waktu"].strftime("%Y-%m-%d %H:%M:%S"),
+                    r["pm10"],
+                    r["pm25"],
+                    r["so2"],
+                    r["co"],
+                    r["o3"],
+                    r["no2"],
+                    r["hc"],
+                    r["kelembaban"],
+                    r["suhu"],
                 ),
             )
 
@@ -416,7 +416,7 @@ async def upload_csv(file: UploadFile = File(...)):
     summary="[AirQ] Manually insert new record",
     description="Insert a single record manually into the air quality dataset via JSON body.",
     responses={
-        200: {"description": "Record inserted successfully"},
+        200: {"description": "Reco  rd inserted successfully"},
         500: {"description": "Internal server error"},
     },
 )
