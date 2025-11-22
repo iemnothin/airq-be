@@ -804,7 +804,7 @@ def system_status():
         conn.close()
     except Exception as e:
         print("⚠ Failed to save system history:", e)
-        
+
     return JSONResponse({
         "backend": backend_status,
         "database": db_status,
@@ -845,9 +845,13 @@ def status_history():
 from fastapi import Header, HTTPException
 import os
 
-@router.post("/status/restart", summary="[AirQ] Restart backend service")
+@router.post("/status/restart")
 def restart_backend(admin_key: str = Header(None)):
-    if admin_key != "AirQ-Admin-2025":  # kunci keamanan sederhana
+    from fastapi import HTTPException
+    import os
+
+    if admin_key != "AirQ-Admin-2025":
         raise HTTPException(status_code=403, detail="Unauthorized")
+
     os.system("systemctl restart fastapi-airq")
-    return {"message": "Backend service restarted"}
+    return {"message": "Backend restarted successfully"}
