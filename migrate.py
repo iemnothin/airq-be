@@ -70,6 +70,19 @@ for pol in pollutants:
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     """
 
+    # --- 🆕 3️⃣ Tabel riwayat status sistem (Dashboard Level 3) ---
+    TABLES["system_status"] = """
+        CREATE TABLE IF NOT EXISTS system_status (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            timestamp DATETIME NOT NULL,
+            backend VARCHAR(20),
+            cpu_usage FLOAT,
+            ram_usage FLOAT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    """
+
+
 # ==============================
 # ⚙️ FUNGSI MIGRASI
 # ==============================

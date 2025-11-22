@@ -792,6 +792,19 @@ def system_status():
     else:
         backend_status = "critical"
 
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO system_status (timestamp, backend, cpu_usage, ram_usage) VALUES (%s, %s, %s, %s)",
+            (datetime.now(), backend_status, cpu, ram)
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print("⚠ Failed to save system history:", e)
+        
     return JSONResponse({
         "backend": backend_status,
         "database": db_status,
@@ -810,3 +823,31 @@ def system_status():
         },
         "timestamp": datetime.now().isoformat()
     })
+
+@router.get("/status/history", summary="[AirQ] Status history 24 hours")
+def status_history():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT timestamp, backend, cpu_usage, ram_usage
+            FROM system_status
+            WHERE timestamp >= NOW() - INTERVAL 24 HOUR
+            ORDER BY timestamp ASC
+        """)
+        rows = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return {"history": rows}
+    except Exception as e:
+        return {"history": [], "error": str(e)}
+
+from fastapi import Header, HTTPException
+import os
+
+@router.post("/status/restart", summary="[AirQ] Restart backend service")
+def restart_backend(admin_key: str = Header(None)):
+    if admin_key != "AirQ-Admin-2025":  # kunci keamanan sederhana
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    os.system("systemctl restart fastapi-airq")
+    return {"message": "Backend service restarted"}
