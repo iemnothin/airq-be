@@ -764,34 +764,49 @@ def system_status():
     """
     Checks database connectivity and returns a summary of services and technologies.
     """
-    from fastapi.responses import JSONResponse
+    import psutil
+    import shutil
     from datetime import datetime
+    from fastapi.responses import JSONResponse
     from db import get_db_connection
 
     try:
         conn = get_db_connection()
-        if conn is not None:
+        if conn:
             conn.cursor().execute("SELECT 1")
             conn.close()
             db_status = "connected"
         else:
             db_status = "disconnected"
-    except Exception as e:
-        print("DB status check failed:", e)
+    except:
         db_status = "disconnected"
 
-    return {
-        "backend": "online",
+    cpu = psutil.cpu_percent(interval=0.5)
+    ram = psutil.virtual_memory().percent
+    disk = shutil.disk_usage("/").percent if hasattr(shutil.disk_usage("/"), 'percent') else 0
+
+    if cpu < 80 and ram < 80 and disk < 90:
+        backend_status = "healthy"
+    elif cpu < 95 and ram < 95 and disk < 98:
+        backend_status = "degraded"
+    else:
+        backend_status = "critical"
+
+    return JSONResponse({
+        "backend": backend_status,
         "database": db_status,
+        "cpu_usage": f"{cpu}%",
+        "ram_usage": f"{ram}%",
+        "disk_usage": f"{disk}%",
         "model_status": "ready",
-        "server": "Apache",
+        "server": "Apache / Gunicorn",
         "technologies": {
             "frontend": "ReactJS",
             "backend": "FastAPI",
             "ml_model": "Facebook Prophet",
             "database": "MySQL",
             "deployment": "Gunicorn",
-            "os": "AlmaLinux 9",
+            "os": "AlmaLinux 9"
         },
         "timestamp": datetime.now().isoformat()
-    }
+    })
