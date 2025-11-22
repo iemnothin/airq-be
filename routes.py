@@ -843,12 +843,11 @@ def status_history():
         return {"history": [], "error": str(e)}
 
 from fastapi import Header, HTTPException
+import os
 
 @router.post("/status/restart")
 def restart_backend(admin_key: str = Header(None)):
-    import os
     if admin_key != "AirQ-Admin-2025":
         raise HTTPException(status_code=403, detail="Unauthorized")
-
     os.system("systemctl restart fastapi-airq")
     return {"message": "Backend restarted successfully"}
