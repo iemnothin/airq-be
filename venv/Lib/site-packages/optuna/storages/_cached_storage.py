@@ -149,14 +149,7 @@ class _CachedStorage(BaseStorage, BaseHeartbeat):
         with self._lock:
             if study_id not in self._studies:
                 self._studies[study_id] = _StudyInfo()
-            study = self._studies[study_id]
             self._add_trials_to_cache(study_id, [frozen_trial])
-            # Since finished trials will not be modified by any worker, we do not
-            # need storage access for them.
-            if frozen_trial.state.is_finished():
-                study.last_finished_trial_id = max(study.last_finished_trial_id, trial_id)
-            else:
-                study.unfinished_trial_ids.add(trial_id)
         return trial_id
 
     def set_trial_param(
@@ -177,7 +170,14 @@ class _CachedStorage(BaseStorage, BaseHeartbeat):
         return self._backend.get_trial_id_from_study_id_trial_number(study_id, trial_number)
 
     def get_best_trial(self, study_id: int) -> FrozenTrial:
-        return self._backend.get_best_trial(study_id)
+        _directions = self.get_study_directions(study_id)
+        if len(_directions) > 1:
+            raise RuntimeError(
+                "Best trial can be obtained only for single-objective optimization."
+            )
+        direction = _directions[0]
+        trial_id = self._backend._get_best_trial_id(study_id, direction)
+        return self.get_trial(trial_id)
 
     def set_trial_state_values(
         self, trial_id: int, state: TrialState, values: Sequence[float] | None = None
@@ -200,7 +200,10 @@ class _CachedStorage(BaseStorage, BaseHeartbeat):
             return None
         study_id, number = self._trial_id_to_study_id_and_number[trial_id]
         study = self._studies[study_id]
-        return study.trials[number] if trial_id not in study.unfinished_trial_ids else None
+        trial = study.trials[number]
+        if not trial.state.is_finished():
+            return None
+        return trial
 
     def get_trial(self, trial_id: int) -> FrozenTrial:
         with self._lock:
@@ -252,6 +255,8 @@ class _CachedStorage(BaseStorage, BaseHeartbeat):
                     study.unfinished_trial_ids.add(trial._trial_id)
                     continue
 
+                # Updates to last_finished_trial_id should only be performed here because they must
+                # be executed only when all trials have been considered.
                 study.last_finished_trial_id = max(study.last_finished_trial_id, trial._trial_id)
                 if trial._trial_id in study.unfinished_trial_ids:
                     study.unfinished_trial_ids.remove(trial._trial_id)
