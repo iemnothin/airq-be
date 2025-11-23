@@ -8,3 +8,11 @@ holidays
 scikit-learn
 mysql-connector-python
 python-multipart
+python-dotenv
+pydantic
+starlette
+orjson
+ujson
+psutil
+gunicorn
+anyio
