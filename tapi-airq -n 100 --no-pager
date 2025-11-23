@@ -1,0 +1,13 @@
+[0;1;31m×[0m fastapi-airq.service - FastAPI AirQ Service
+     Loaded: loaded (]8;;file://abiila-srv/etc/systemd/system/fastapi-airq.service/etc/systemd/system/fastapi-airq.service]8;;; [0;1;32menabled[0m; preset: [0;1;38;5;185mdisabled[0m)
+     Active: [0;1;31mfailed[0m (Result: exit-code) since Sat 2025-11-22 19:16:36 UTC; 3s ago
+   Duration: 2ms
+    Process: 10438 ExecStart=/home/api-airq.abiila.com/public_html/venv/bin/gunicorn main:app -k uvicorn.workers.UvicornWorker --bind 127.0.0.1:8001 --forwarded-allow-ips=* [0;1;31m(code=exited, status=203/EXEC)[0m
+   Main PID: 10438 (code=exited, status=203/EXEC)
+        CPU: 1ms
+
+Nov 22 19:16:36 abiila-srv systemd[1]: fastapi-airq.service: Scheduled restart job, restart counter is at 5.
+Nov 22 19:16:36 abiila-srv systemd[1]: Stopped FastAPI AirQ Service.
+Nov 22 19:16:36 abiila-srv systemd[1]: [0;1;38;5;185m[0;1;39m[0;1;38;5;185mfastapi-airq.service: Start request repeated too quickly.[0m
+Nov 22 19:16:36 abiila-srv systemd[1]: [0;1;38;5;185m[0;1;39m[0;1;38;5;185mfastapi-airq.service: Failed with result 'exit-code'.[0m
+Nov 22 19:16:36 abiila-srv systemd[1]: [0;1;31m[0;1;39m[0;1;31mFailed to start FastAPI AirQ Service.[0m
