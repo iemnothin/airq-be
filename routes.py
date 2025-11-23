@@ -406,9 +406,49 @@ def system_status():
         "timestamp": datetime.now().isoformat()
     })
 
-
 # ============================================================
-# STATUS HISTORY
+# 12. Activity Log 
+# ============================================================
+@router.get("/activity-log")
+def get_activity_log():
+    """Return history of model activities."""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM activity_log ORDER BY timestamp DESC LIMIT 200")
+        rows = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return JSONResponse({"log": rows})
+    except Exception as e:
+        traceback.print_exc()
+        return JSONResponse({"error": str(e)}, 500)
+
+
+@router.post("/activity-log/add")
+async def add_activity_log(request: Request):
+    """Insert activity from frontend ModelPage."""
+    try:
+        body = await request.json()
+        event = body.get("event")
+        detail = body.get("detail")
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO activity_log (event, detail) VALUES (%s, %s)",
+            (event, detail)
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return JSONResponse({"message": "Activity logged"})
+    except Exception as e:
+        traceback.print_exc()
+        return JSONResponse({"error": str(e)}, 500)
+    
+# ============================================================
+# 13. STATUS HISTORY
 # ============================================================
 @router.get("/status/history")
 def status_history():
@@ -430,7 +470,7 @@ def status_history():
 
 
 # ============================================================
-# RESTART SERVICE
+# 14. RESTART SERVICE
 # ============================================================
 from fastapi import Header, HTTPException
 import os
@@ -441,3 +481,17 @@ def restart_backend(admin_key: str = Header(None)):
         raise HTTPException(status_code=403, detail="Unauthorized")
     os.system("systemctl restart fastapi-airq")
     return {"message": "Backend restarted successfully"}
+
+
+@router.post("/activity-log")
+def activity_log(event: str = Body(...)):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO activity_log (timestamp, event) VALUES (%s, %s)",
+        (datetime.now(), event)
+    )
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return {"status": "ok"}
