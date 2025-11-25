@@ -343,6 +343,11 @@ def delete_all_data():
 # ============================================================
 # 6. Upload CSV
 # ============================================================
+def clean_date_to_dateonly(dt: datetime):
+    try:
+        return dt.date()   # hanya tanggal, tanpa jam
+    except:
+        return dt
 
 @router.post(
     "/upload-csv",
@@ -398,7 +403,7 @@ async def upload_csv(file: UploadFile = File(...)):
             cursor.execute(
                 query,
                 (
-                    r["waktu"].strftime("%Y-%m-%d %H:%M:%S"),
+                    clean_date_to_dateonly(r["waktu"]).strftime("%Y-%m-%d")
                     r["pm10"], r["pm25"], r["so2"], r["co"],
                     r["o3"], r["no2"], r["hc"],
                     r["kelembaban"], r["suhu"],
