@@ -42,7 +42,7 @@ def process_basic_forecast(df_full, pollutants):
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(f"DELETE FROM {table_name}")
-        insert = f"INSERT INTO {table_name} (waktu,yhat,yhat_lower,yhat_upper) VALUES (%s,%s,%s,%s)"
+        insert = f"INSERT INTO {table_name} (ds,yhat,yhat_lower,yhat_upper) VALUES (%s,%s,%s,%s)"
         for _, row in result.iterrows():
             cursor.execute(insert, (
                 datetime.strptime(row["ds"], "%Y-%m-%d").date(),
