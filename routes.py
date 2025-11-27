@@ -574,7 +574,10 @@ def process_advanced_all():
                         )
                         + "\n\n"
                     )
-                    process_advanced_forecast_stream(df, [pol])
+
+                    # 👇 WAJIB — iterate generator
+                    for chunk in process_advanced_forecast_stream(df, [pol]):
+                        yield chunk
                     yield (
                         "data: "
                         + json.dumps(
