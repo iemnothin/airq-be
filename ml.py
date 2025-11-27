@@ -106,7 +106,7 @@ def process_advanced_forecast_stream(df_full, pollutants):
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute(f"DELETE FROM forecast_{pol}_with_parameters_data")
-            insert_sql = "INSERT INTO forecast_{0}_with_parameters_data (waktu, yhat, yhat_lower, yhat_upper) VALUES (%s, %s, %s, %s)".format(pol)
+            insert_sql = "INSERT INTO forecast_{0}_with_parameters_data (ds, yhat, yhat_lower, yhat_upper) VALUES (%s, %s, %s, %s)".format(pol)
             for _, row in result.iterrows():
                 cursor.execute(insert_sql, (
                     datetime.strptime(row["ds"], "%Y-%m-%d").date(),
