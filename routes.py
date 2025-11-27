@@ -885,7 +885,7 @@ def get_forecast_by_pollutant(pol: str):
         cursor = conn.cursor(dictionary=True)
 
         table = f"forecast_{pol}_data"
-        cursor.execute(f"SELECT * FROM {table} ORDER BY waktu ASC")
+        cursor.execute(f"SELECT * FROM {table} ORDER BY ds ASC")
         rows = cursor.fetchall()
 
         cursor.close()
