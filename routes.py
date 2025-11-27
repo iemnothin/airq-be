@@ -517,7 +517,7 @@ def process_basic_all():
 # 9. Process Forecast Advanced (Streaming)
 # ============================================================
 
-@router.post(
+@router.get(
     "/model/process-advanced",
     summary="Run advanced (streaming) Prophet forecast",
     response_description="Server-Sent Events (SSE) stream with progress updates.",
