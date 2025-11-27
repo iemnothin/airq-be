@@ -623,6 +623,37 @@ def process_advanced_all():
 
     return StreamingResponse(progress_stream(), media_type="text/event-stream")
 
+@router.get(
+    "/forecast/{pol}/advanced",
+    summary="Get advanced forecast result for specific pollutant",
+)
+def get_advanced_forecast_by_pollutant(pol: str):
+    """
+    Return advanced forecast data for the given pollutant.
+    Table: forecast_{pol}_with_parameters_data
+    """
+    allowed = ["pm10", "pm25", "so2", "co", "o3", "no2", "hc"]
+    pol = pol.lower()
+
+    if pol not in allowed:
+        raise HTTPException(status_code=400, detail="Invalid pollutant name")
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        table = f"forecast_{pol}_with_parameters_data"
+        cursor.execute(f"SELECT * FROM {table} ORDER BY ds ASC")
+        rows = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return rows
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 # ============================================================
 # 10. Clear Forecast Tables
