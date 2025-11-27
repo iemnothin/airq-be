@@ -864,3 +864,33 @@ def restart_backend(admin_key: str = Header(None, description="Admin secret key"
 
     os.system("systemctl restart fastapi-airq")
     return MessageResponse(message="Backend restarted successfully")
+
+@router.get(
+    "/forecast/{pol}",
+    summary="Get forecast result for specific pollutant",
+)
+def get_forecast_by_pollutant(pol: str):
+    """
+    Return forecast data for the given pollutant.
+    Table: forecast_{pol}_data
+    """
+    allowed = ["pm10", "pm25", "so2", "co", "o3", "no2", "hc"]
+    pol = pol.lower()
+
+    if pol not in allowed:
+        raise HTTPException(status_code=400, detail="Invalid pollutant name")
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        table = f"forecast_{pol}_data"
+        cursor.execute(f"SELECT * FROM {table} ORDER BY waktu ASC")
+        rows = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return rows
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
