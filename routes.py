@@ -932,6 +932,41 @@ def check_basic_forecast():
     except Exception as e:
         return {"exists": False, "error": str(e)}
 
+@router.get("/forecast/check-advanced")
+def check_advanced_forecast():
+    """
+    Check whether advanced forecast data already exists
+    on any forecast_{pol}_with_parameters_data table.
+    """
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        tables = [
+            "forecast_pm10_with_parameters_data",
+            "forecast_pm25_with_parameters_data",
+            "forecast_so2_with_parameters_data",
+            "forecast_co_with_parameters_data",
+            "forecast_o3_with_parameters_data",
+            "forecast_no2_with_parameters_data",
+            "forecast_hc_with_parameters_data",
+        ]
+
+        exists = False
+        for t in tables:
+            cursor.execute(f"SELECT COUNT(*) AS c FROM {t}")
+            row = cursor.fetchone()
+            if row["c"] > 0:
+                exists = True
+                break
+
+        cursor.close()
+        conn.close()
+
+        return {"exists": exists}
+
+    except Exception as e:
+        return {"exists": False, "error": str(e)}
 
 @router.get(
     "/forecast/{pol}",
