@@ -52,28 +52,26 @@ def process_basic_forecast(df_full, pollutants):
     return results
 
 def process_advanced_forecast_stream(df_full, pollutants):
-    """
-    Streaming version of advanced forecast — yields progress updates as strings.
-    """
     holidays = make_holidays_df(year_list=[2022, 2023, 2024, 2025, 2026], country="ID")
     param_grid = list(itertools.product(
-        [0.05, 0.1, 0.2],
-        [1.0, 5.0, 10.0],
-        [1.0, 5.0, 10.0],
-        [True, False],
-        [True, False]
+        [0.05, 0.1, 0.2],        # changepoint_prior_scale
+        [1.0, 5.0, 10.0],        # seasonality_prior_scale
+        [1.0, 5.0, 10.0],        # holidays_prior_scale
+        [True, False],           # weekly_seasonality
+        [True, False]            # yearly_seasonality
     ))
 
     for pol in pollutants:
-        yield f"data: {json.dumps({'status': 'begin', 'pollutant': pol.upper(), 'progress': 0, 'message': f'Starting {pol.upper()}'})}\n\n"
+        yield f"data: {json.dumps({'status': 'begin', 'pollutant': pol.upper(), 'progress': 0})}\n\n"
         try:
             df = df_full[["waktu", pol]].rename(columns={"waktu": "ds", pol: "y"}).dropna(subset=["y"])
             total_combos = len(param_grid)
-            best_mape, best_model = float("inf"), None
+            best_mape, best_model, best_params = float("inf"), None, None
 
             for i, (cp, ss, hs, w, y) in enumerate(param_grid, start=1):
                 progress = round((i / total_combos) * 60, 2)
-                yield f"data: {json.dumps({'status': 'progress', 'pollutant': pol.upper(), 'progress': progress, 'message': f'Training'})}\n\n"
+                yield f"data: {json.dumps({'status': 'progress', 'pollutant': pol.upper(), 'progress': progress})}\n\n"
+
                 try:
                     model = Prophet(
                         yearly_seasonality=y,
@@ -85,35 +83,51 @@ def process_advanced_forecast_stream(df_full, pollutants):
                     )
                     model.add_seasonality("monthly", period=30.5, fourier_order=5)
                     model.fit(df)
+
                     cv = cross_validation(model, initial="180 days", period="180 days", horizon="60 days")
                     mape = mean_absolute_percentage_error(cv["y"], cv["yhat"])
+
                     if mape < best_mape:
-                        best_mape, best_model = mape, model
+                        best_mape = mape
+                        best_model = model
+                        best_params = (cp, ss, hs)
                 except Exception:
                     continue
 
             if not best_model:
-                yield f"data: {json.dumps({'status': 'error', 'pollutant': pol.upper(), 'message': 'No valid model'})}\n\n"
+                yield f"data: {json.dumps({'status': 'error', 'pollutant': pol.upper()})}\n\n"
                 continue
-
-            yield f"data: {json.dumps({'status': 'progress', 'pollutant': pol.upper(), 'progress': 75, 'message': f'Generating forecast for {pol.upper()}'})}\n\n"
 
             forecast = best_model.predict(best_model.make_future_dataframe(periods=30))
             result = forecast[["ds", "yhat", "yhat_lower", "yhat_upper"]].tail(30)
             result["ds"] = result["ds"].dt.strftime("%Y-%m-%d")
 
-            # Simpan ke DB
+            # --- SAVE TO DATABASE ---
+            cp, ss, hs = best_params
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute(f"DELETE FROM forecast_{pol}_with_parameters_data")
-            insert_sql = "INSERT INTO forecast_{0}_with_parameters_data (ds, yhat, yhat_lower, yhat_upper) VALUES (%s, %s, %s, %s)".format(pol)
+
+            insert_sql = f"""
+            INSERT INTO forecast_{pol}_with_parameters_data 
+            (ds, yhat, yhat_lower, yhat_upper, changepoint_prior_scale, seasonality_prior_scale, holidays_prior_scale, model_mape)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """
+
             for _, row in result.iterrows():
                 cursor.execute(insert_sql, (
                     datetime.strptime(row["ds"], "%Y-%m-%d").date(),
-                    float(row["yhat"]), float(row["yhat_lower"]), float(row["yhat_upper"])
+                    float(row["yhat"]),
+                    float(row["yhat_lower"]),
+                    float(row["yhat_upper"]),
+                    cp, ss, hs, float(best_mape)
                 ))
-            conn.commit(); cursor.close(); conn.close()
 
-            yield f"data: {json.dumps({'status': 'done', 'pollutant': pol.upper(), 'progress': 100, 'message': f'{pol.upper()} completed (MAPE={best_mape:.4f})'})}\n\n"
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            yield f"data: {json.dumps({'status': 'done', 'pollutant': pol.upper(), 'progress': 100})}\n\n"
+
         except Exception as e:
             yield f"data: {json.dumps({'status': 'error', 'pollutant': pol.upper(), 'message': str(e)})}\n\n"
