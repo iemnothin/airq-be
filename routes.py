@@ -865,6 +865,43 @@ def restart_backend(admin_key: str = Header(None, description="Admin secret key"
     os.system("systemctl restart fastapi-airq")
     return MessageResponse(message="Backend restarted successfully")
 
+@router.get("/forecast/check-basic")
+def check_basic_forecast():
+    """
+    Check whether basic forecast data already exists
+    on any pollutant forecast table.
+    """
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        tables = [
+            "forecast_pm10_data",
+            "forecast_pm25_data",
+            "forecast_so2_data",
+            "forecast_co_data",
+            "forecast_o3_data",
+            "forecast_no2_data",
+            "forecast_hc_data",
+        ]
+
+        exists = False
+        for t in tables:
+            cursor.execute(f"SELECT COUNT(*) AS c FROM {t}")
+            row = cursor.fetchone()
+            if row["c"] > 0:
+                exists = True
+                break
+
+        cursor.close()
+        conn.close()
+
+        return {"exists": exists}
+
+    except Exception as e:
+        return {"exists": False, "error": str(e)}
+
+
 @router.get(
     "/forecast/{pol}",
     summary="Get forecast result for specific pollutant",
