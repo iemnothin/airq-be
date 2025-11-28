@@ -14,6 +14,12 @@ DB_CONFIG = {
     "user": os.getenv("DB_USER", "apia_abiila_admin"),
     "password": os.getenv("DB_PASS", "Criticaleven10"),
 }
+# DB_CONFIG = {
+#     "host": os.getenv("DB_HOST", "127.0.0.1"),
+#     "database": os.getenv("DB_NAME", "db_airq"),
+#     "user": os.getenv("DB_USER", "root"),
+#     "password": os.getenv("DB_PASS", ""),
+# }
 
 # ==============================
 # 📦 DEFINISI SKEMA TABEL

@@ -24,12 +24,13 @@ origins = [
     "https://airq.abiila.com",
     "http://airq.abiila.com",
     "https://api-airq.abiila.com",
-    "http://api-airq.abiila.com"
+    "http://api-airq.abiila.com",
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    # allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
